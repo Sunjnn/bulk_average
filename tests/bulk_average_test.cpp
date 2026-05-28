@@ -126,3 +126,21 @@ TEST(BulkAverageTest, MaxAndMin) {
     EXPECT_EQ(avg.count(), 2U);
     EXPECT_DOUBLE_EQ(avg.to_double(), -0.5);
 }
+
+TEST(BulkAverageTest, MassiveCountEvenValues) {
+    constexpr int64_t N = std::numeric_limits<int32_t>::max();
+    BulkAverage avg;
+    for (int64_t val = 0; val <= 10; val += 2) {
+        for (int64_t i = 0; i < N; ++i) {
+            avg += val;
+        }
+    }
+    // 6 groups of INT_MAX elements with values 0,2,4,6,8,10
+    // total count = 6 * INT_MAX
+    // sum = INT_MAX * (0+2+4+6+8+10) = INT_MAX * 30
+    // mean = 30 / 6 = 5, remainder = 0
+    EXPECT_EQ(avg.count(), static_cast<uint64_t>(N) * 6);
+    EXPECT_EQ(avg.mean(), 5);
+    EXPECT_EQ(avg.remainder(), 0U);
+    EXPECT_DOUBLE_EQ(avg.to_double(), 5.0);
+}
